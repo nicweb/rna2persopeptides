@@ -19,17 +19,17 @@ def run_external_cmd(command):
 	try:
 		subprocess.check_output(command, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
-        print e.output
+		print e.output
 
 def createindex(args):
 #create directory and create star index
 	if not (args['starindex'] and args['annotation'] and args['fasta']):
 		print "not enough arguments for creating"
-        exit(1)
-    print "creating directory"
-    subprocess.check_output(["mkdir",args['starindex']])
-    print "Creating Star Index"
-    starcreateindex=["STAR",
+		exit(1)
+	print "creating directory"
+	subprocess.check_output(["mkdir",args['starindex']])
+	print "Creating Star Index"
+	starcreateindex=["STAR",
 					"--runMode", "genomeGenerate",
 					"--runThreadN", "4",
 					"--genomeDir", args['starindex'],
