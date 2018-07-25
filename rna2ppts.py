@@ -13,7 +13,7 @@ parser.add_argument("-v", "--vcf",help="path to vcf")
 parser.add_argument("--verbose", help="increase output verbosity",action="store_true")
 parser.add_argument("--createindex", help="creates star index req. -s -f -a",action="store_true")
 args=vars(parser.parse_args())
-#print args
+print args
 
 def run_external_cmd(command):
 	#bad error handling at the moment
@@ -23,11 +23,13 @@ def run_external_cmd(command):
 	try:
 		subprocess.check_output(command, stderr=subprocess.STDOUT)
 	except subprocess.CalledProcessError as e:
+		print "ERROR executing Job"
 		print e.output
+		exit(1)
 	t1=time.clock()
 	print "Execution took %i seconds"%(t1-t0)
 
-def createindex(args):
+def run_createindex(args):
 #create directory and create star index
 	if not (args['starindex'] and args['annotation'] and args['fasta']):
 		print "not enough arguments for creating"
@@ -46,12 +48,15 @@ def createindex(args):
 	run_external_cmd(starcreateindex_cmd)
 
 
-if (args['createindex'] != ''):
+if (args['createindex']):
 	print "calling creating index subroutine"
-	createindex(args)
+	run_createindex(args)
 
 
-def star1stpass(args):
+def run_star1stpass(args):
+	if not (args['starindex'] and args['r1'] and args['r2'] and args['fasta'] and args['outputdir']):
+		print "not enough arguments for 1. star run"
+		exit(1)
 	star1stpass_cmd=["STAR", \
            "--genomeDir",args['starindex'], \
            "--readFilesIn",args['r1'],args['r2'], \
@@ -70,12 +75,12 @@ def star1stpass(args):
            "--sjdbOverhang","100", \
            "--outSAMstrandField","intronMotif", \
            "--outSAMtype","None", \
-           "--outSAMmode","None", \
-           "--outFileNamePrefix",args['outputdir']]
+           "--outSAMmode","None"]#, \
+       #    "--outFileNamePrefix",args['outputdir']]
 	print "calling 1.pass Star Mapping subroutine"
 	run_external_cmd(star1stpass_cmd)
 		   
-def star2ndpass(args):
+def run_star2ndpass(args):
 	star2ndpass_cmd=["STAR", \
              "--genomeDir","GENOME_TMP", \
              "--readFilesIn",args['r1'],args['r2'], \
@@ -98,20 +103,23 @@ def star2ndpass(args):
              "--outSAMunmapped","Within", \
              "--outSAMtype","BAM","SortedByCoordinate", \
              "--outSAMheaderHD","@HD VN:1.4", \
-             "--outSAMattrRGline","ID:SM", \
-             "--outFileNamePrefix",args['outputdir']]
+             "--outSAMattrRGline","ID:SM"]#, \
+           #  "--outFileNamePrefix",args['outputdir']]
 	print "calling 2. pass star mapping subroutine"
 	run_external_cmd(star2ndpass_cmd)
 
-def starreindex(args):
+def run_starreindex(args):
+	#TODO: Add annotation???
+	print "creating directory"
+	subprocess.check_output(["mkdir","GENOME_TMP"])
 	starreindex_cmd=["STAR", \
              "--runMode","genomeGenerate", \
              "--genomeDir","GENOME_TMP", \
              "--genomeFastaFiles",args['fasta'], \
              "--sjdbOverhang","100", \
              "--runThreadN","4", \
-             "--sjdbFileChrStartEnd","SJ.out.tab", \
-             "--outFileNamePrefix",args['outputdir']]
+             "--sjdbFileChrStartEnd","SJ.out.tab"]#, \
+         #    "--outFileNamePrefix",args['outputdir']]
 	print "calling star redindexing"
 	run_external_cmd(starreindex_cmd)
 	
@@ -125,8 +133,8 @@ def run_spadder():
 	run_external_cmd(run_spladder_cmd)
 	
 			  
-run_star1stpass()
-run_starreindex()
-run_star2ndpass()
-run_spladder()
+run_star1stpass(args)
+run_starreindex(args)
+run_star2ndpass(args)
+#run_spladder(args)
 
