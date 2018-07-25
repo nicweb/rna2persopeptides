@@ -29,7 +29,14 @@ def createindex(args):
     print "creating directory"
     subprocess.check_output(["mkdir",args['starindex']])
     print "Creating Star Index"
-    starcreateindex=["STAR","--runMode","genomeGenerate","--runThreadN", "4","--genomeDir", args['starindex'],"--genomeFastaFiles",args['fasta'],"--sjdbGTFfile",args['annotation'],"--sjdbGTFtagExonParentTranscript","Parent","-sjdbOverhang","100"]
+    starcreateindex=["STAR",
+					"--runMode", "genomeGenerate",
+					"--runThreadN", "4",
+					"--genomeDir", args['starindex'],
+					"--genomeFastaFiles",args['fasta'],
+					"--sjdbGTFfile",args['annotation'],
+					"--sjdbGTFtagExonParentTranscript","Parent",
+					"-sjdbOverhang","100"]
 	run_external_cmd(starindex)
 
 
@@ -37,10 +44,10 @@ if (args['createindex'] != ''):
 	createindex(args)
 
 
-def star1stpass():
-	star1pass=["STAR",
-           "--genomeDir","$1",
-           "--readFilesIn","$2", "$3"
+def star1stpass(args):
+	star1stpass_cmd=["STAR",
+           "--genomeDir",args['starindex'],
+           "--readFilesIn",args['r1'],args['r2'],
            "--runThreadN","4",
            "--outFilterMultimapScoreRange","1",
            "--outFilterMultimapNmax","20",
@@ -57,12 +64,13 @@ def star1stpass():
            "--outSAMstrandField","intronMotif",
            "--outSAMtype","None",
            "--outSAMmode","None",
-           "--outFileNamePrefix","/path"]
+           "--outFileNamePrefix",args['outputdir']]
+	run_external_cmd(star1stpass_cmd)
 		   
-def star2ndpass():
-	star2ndpass=["STAR",
+def star2ndpass(args):
+	star2ndpass_cmd=["STAR",
              "--genomeDir","GENOME_TMP",
-             "--readFilesIn","$1","$2",
+             "--readFilesIn",args['r1'],args['r2'],
              "--runThreadN","4",
              "--outFilterMultimapScoreRange","1",
              "--outFilterMultimapNmax","20",
@@ -83,25 +91,27 @@ def star2ndpass():
              "--outSAMtype","BAM","SortedByCoordinate",
              "--outSAMheaderHD","@HD VN:1.4",
              "--outSAMattrRGline","ID:SM",
-             "--outFileNamePrefix","/path"]
+             "--outFileNamePrefix",args['outputdir']]
+	run_external_cmd(star2ndpass_cmd)
 
-def starreindex():
-	starreindex=["STAR",
+def starreindex(args):
+	starreindex_cmd=["STAR",
              "--runMode","genomeGenerate",
              "--genomeDir","GENOME_TMP",
-             "--genomeFastaFiles","/mnt/test_data/refs/GRCh37.primary_assembly.genome.fa",
+             "--genomeFastaFiles",args['fasta'],
              "--sjdbOverhang","100",
              "--runThreadN","4",
              "--sjdbFileChrStartEnd","SJ.out.tab",
-             "--outFileNamePrefix","/path"]
-
+             "--outFileNamePrefix",args['outputdir']
+	run_external_cmd(starreindex_cmd)
+	
 def run_spadder():
-	run_spladder=["python",
+	run_spladder_cmd=["python",
               "~/tools/spladder/python/spladder.py",
               "-b","Aligned.sortedByCoord.out.bam",
               "-o","spladdrout",
               "-a",args['annotation']
-	run_external_cmd(run_spladder)
+	run_external_cmd(run_spladder_cmd)
 	
 			  
 run_star1stpass()
