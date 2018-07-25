@@ -15,9 +15,9 @@ args=vars(parser.parse_args())
 print args
 
 def run_external_cmd(command):
-    print "Executing Command %s" %''.join(command)
+	print "Executing Command %s" %''.join(command)
 	try:
-        subprocess.check_output(command, stderr=subprocess.STDOUT)
+		subprocess.check_output(command, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         print e.output
 
