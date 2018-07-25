@@ -13,20 +13,22 @@ parser.add_argument("-v", "--vcf",help="path to vcf")
 parser.add_argument("--verbose", help="increase output verbosity",action="store_true")
 parser.add_argument("--createindex", help="creates star index req. -s -f -a",action="store_true")
 args=vars(parser.parse_args())
-print args
+#print args
 
+star_exec="STAR"
+spladder_exec="/software/spladder/python/spladder.py"
 def run_external_cmd(command):
 	#bad error handling at the moment
 	#infos only printed when process finishes
 	print "Executing Command %s" %' '.join(command)
-	t0=time.clock()
+	t0=time.time()
 	try:
 		subprocess.check_output(command, stderr=subprocess.STDOUT)
 	except subprocess.CalledProcessError as e:
 		print "ERROR executing Job"
 		print e.output
 		exit(1)
-	t1=time.clock()
+	t1=time.time()
 	print "Execution took %i seconds"%(t1-t0)
 
 def run_createindex(args):
@@ -37,7 +39,7 @@ def run_createindex(args):
 	print "creating directory"
 	subprocess.check_output(["mkdir",args['starindex']])
 	print "Creating Star Index"
-	starcreateindex_cmd=["STAR", \
+	starcreateindex_cmd=[star_exec, \
 					"--runMode", "genomeGenerate", \
 					"--runThreadN", "4", \
 					"--genomeDir", args['starindex'], \
@@ -57,7 +59,7 @@ def run_star1stpass(args):
 	if not (args['starindex'] and args['r1'] and args['r2'] and args['fasta'] and args['outputdir']):
 		print "not enough arguments for 1. star run"
 		exit(1)
-	star1stpass_cmd=["STAR", \
+	star1stpass_cmd=[star_exec, \
            "--genomeDir",args['starindex'], \
            "--readFilesIn",args['r1'],args['r2'], \
            "--runThreadN","4", \
@@ -81,7 +83,7 @@ def run_star1stpass(args):
 	run_external_cmd(star1stpass_cmd)
 		   
 def run_star2ndpass(args):
-	star2ndpass_cmd=["STAR", \
+	star2ndpass_cmd=[star_exec, \
              "--genomeDir","GENOME_TMP", \
              "--readFilesIn",args['r1'],args['r2'], \
              "--runThreadN","4", \
@@ -99,7 +101,7 @@ def run_star2ndpass(args):
              "--outFilterScoreMinOverLread","0.33", \
              "--sjdbOverhang","100", \
              "--outSAMstrandField","intronMotif", \
-             "--outSAMattributes","NH HI NM MD AS XS", \
+             "--outSAMattributes","NH","HI","NM","MD","AS","XS", \
              "--outSAMunmapped","Within", \
              "--outSAMtype","BAM","SortedByCoordinate", \
              "--outSAMheaderHD","@HD VN:1.4", \
@@ -112,7 +114,7 @@ def run_starreindex(args):
 	#TODO: Add annotation???
 	print "creating directory"
 	subprocess.check_output(["mkdir","GENOME_TMP"])
-	starreindex_cmd=["STAR", \
+	starreindex_cmd=[star_exec, \
              "--runMode","genomeGenerate", \
              "--genomeDir","GENOME_TMP", \
              "--genomeFastaFiles",args['fasta'], \
@@ -123,18 +125,21 @@ def run_starreindex(args):
 	print "calling star redindexing"
 	run_external_cmd(starreindex_cmd)
 	
-def run_spadder():
+def run_spladder(args):
 	run_spladder_cmd=["python", \
-              "~/tools/spladder/python/spladder.py", \
+              spladder_exec, \
               "-b","Aligned.sortedByCoord.out.bam", \
               "-o","spladdrout", \
               "-a",args['annotation']]
-	print "calling spladdr subroutine"
+	print "calling spladder subroutine"
 	run_external_cmd(run_spladder_cmd)
 	
-			  
-run_star1stpass(args)
-run_starreindex(args)
+t_start=time.time()			  
+#run_star1stpass(args)
+#run_starreindex(args)
 run_star2ndpass(args)
-#run_spladder(args)
+run_spladder(args)
+#do peptide stuff
 
+t_end=time.time()
+print "all done in %i seconds"%(t_end-t_start)
