@@ -31,9 +31,7 @@ def run_createindex(args):
 	run_external_cmd(starcreateindex_cmd)
 
 
-if (args['createindex']):
-	print "calling creating index subroutine"
-	run_createindex(args)
+
 
 
 def run_star1stpass(args):

@@ -2,7 +2,8 @@ import argparse
 import subprocess
 import time
 
-import rna2ppts
+from rna2ppts import wrapper
+from rna2ppts import converter 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-r1", help="First RNA-FastQFile")
@@ -21,12 +22,17 @@ star_exec="STAR"
 spladder_exec="/software/spladder/python/spladder.py"
 
 	
-t_start=time.time()			  
+t_start=time.time()	
+
+if (args['createindex']):
+	print "calling creating index subroutine"
+	run_createindex(args)
+	
 #run_star1stpass(args)
 #run_starreindex(args)
-run_star2ndpass(args)
-run_spladder(args)
+#run_star2ndpass(args)
+#run_spladder(args)
 #do peptide stuff
-
+converter.calc_proteins('spladdrout',args['fasta'],args['vcf'])
 t_end=time.time()
 print "all done in %i seconds"%(t_end-t_start)

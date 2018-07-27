@@ -11,19 +11,21 @@ import pyfaidx
 from pysam import VariantFile
 from Bio.Seq import Seq
 
-sourcebase= '/mnt/test_data/hepavac34/rna_benign/spladdrout'
-#sourcebase = '/tmp/'
-reffile = '/mnt/test_data/refs/GRCh37.primary_assembly.genome.fa'
+#sourcebase= '/mnt/test_data/hepavac34/rna_benign/spladdrout'
+
+#reffile = '/mnt/test_data/refs/GRCh37.primary_assembly.genome.fa'
+#vcffile= '/tmp/vcf.vcf.gz' #must be indexed!
+
 fileending = 'gff3'
-vcffile= '/tmp/vcf.vcf.gz' #must be indexed!
+
+
 
 #db = gffutils.create_db('/tmp/ensg228794.gff', ':memory:')
-fasta = pyfaidx.Fasta('/mnt/test_data/refs/GRCh37.primary_assembly.genome.fa')
-vcffile='/tmp/vcf.vcf.gz'
 
-outfile = '/tmp/predicted_exons.fa'
-outfile2 = '/tmp/predicted_genes.fa'  
-vcfrecords=VariantFile(vcffile)
+
+outfile = 'predicted_exons.fa'
+outfile2 = 'predicted_genes.fa'  
+
 
 
 #Getting all gff-files in base directory
@@ -36,30 +38,33 @@ def get_gff_files(sourcebase):
     print "Found %i file(s) in %s ending with %s." %(len(gfffiles), sourcebase, fileending)
     return gfffiles
 
-def get_gene_sequences(gene,db):
-    sequences = []
-    geneseq = []
-    num_mod=0
+def get_gene_sequences(gene,db,vcfrecords):
+	sequences = []
+	geneseq = []
+	num_mod=0
     #print gene
-    for i in db.children(gene,featuretype='exon'):
-        events=check_feature_for_vcfevent(i)
-        if len(events) == 0:
-            rec = i.sequence(fasta)#.translate(to_stop=True)
-            sequences.append(SeqRecord(Seq(rec),i.id,i.attributes['Parent'][0],""))
-            geneseq.append(rec)
-        else:
-            num_mod+=1
+	for i in db.children(gene,featuretype='exon'):
+		if vcfrecords != '':
+			events=check_feature_for_vcfevent(i)
+		else:
+			events=[]
+		if len(events) == 0:
+			rec = i.sequence(fasta)#.translate(to_stop=True)
+			sequences.append(SeqRecord(Seq(rec),i.id,i.attributes['Parent'][0],""))
+			geneseq.append(rec)
+		else:
+			num_mod+=1
         #    sequences.append(Seq.translate(i.sequence(fasta),to_stop=True))
-            rec = get_modified_sequence(i.sequence(fasta),events,i.start)
-            sequences.append(SeqRecord(Seq(rec),i.id,i.attributes['Parent'][0],""))
-            geneseq.append(rec)
+			rec = get_modified_sequence(i.sequence(fasta),events,i.start)
+			sequences.append(SeqRecord(Seq(rec),i.id,i.attributes['Parent'][0],""))
+			geneseq.append(rec)
             #sequences.append(get_modified_sequence(i.sequence(fasta),events,i.start))
             #return get_modified_sequence(i.sequence(fasta),events)
         #if i.id!='exon_7569':
         #    print "this is the record"
         #    print sequences[-1]
         
-    return sequences,[SeqRecord(Seq(''.join(geneseq)),gene.id,"")], num_mod 
+	return sequences,[SeqRecord(Seq(''.join(geneseq)),gene.id,"")], num_mod 
 
 def check_feature_for_vcfevent(feature):
     vcfevents = []
@@ -124,33 +129,43 @@ def is_del(e):
     return False
 
 def translate_records(records):
-    new_records = []
-    for rec in records:
-        for i in range(0,3):
-            new_records.append(SeqRecord(rec.seq[i:].translate(to_stop=True),"%s %s TL-Windows: %i "%(rec.name,rec.id,i),rec.name,""))
-    return new_records
+	new_records = []
+	for rec in records:
+		for i in range(0,3):
+			new_records.append(SeqRecord(rec.seq[i:].translate(to_stop=True),"%s %s TL-Windows: %i Strand: +"%(rec.name,rec.id,i),rec.name,""))
+			new_records.append(SeqRecord(rec.seq[i:].reverse_complement().translate(to_stop=True),"%s %s TL-Windows: %i Strand: - "%(rec.name,rec.id,i),rec.name,""))
+	return new_records
 
-def run():
-    gfffiles = get_gff_files(sourcebase)
-    
-    for infile in gfffiles:
-        total_genes=0
-        total_exons=0
-        total_genes_wrote=0
-        total_exons_wrote=0
-        total_mod=0
-        db = gffutils.create_db(infile, ':memory:')
-        for gene in db.features_of_type('gene'):
-            total_genes+=1
-            seqs,geneseq,num_mod=get_gene_sequences(gene,db)
-            total_exons+=len(seqs)
-            total_mod+=num_mod
+def calc_proteins(sourcebase,reffile,vcffile):
+	gfffiles = get_gff_files(sourcebase)
+	if vcffile != None:
+		print "VCFFile Provided"
+		vcfrecords=VariantFile(vcffile)
+	else:
+		no_vcf=True
+		vcfrecords=''
+		
+	fasta = pyfaidx.Fasta(reffile)
+	
+	
+	for infile in gfffiles:
+		total_genes=0
+		total_exons=0
+		total_genes_wrote=0
+		total_exons_wrote=0
+		total_mod=0
+		db = gffutils.create_db(infile, ':memory:')
+		for gene in db.features_of_type('gene'):
+			total_genes+=1
+			seqs,geneseq,num_mod=get_gene_sequences(gene,db,vcfrecords)
+			total_exons+=len(seqs)
+			total_mod+=num_mod
             #a=seqs
            # return seqs
             #return geneseq
-            total_exons_wrote+=write_records(translate_records(seqs),'exons')
-            total_genes_wrote+=write_records(translate_records(geneseq),'genes')
-        print "processed (and wrote): %s with %i(%i) genes and %i(%i) exons (%i modified))" %(infile,total_genes,total_genes_wrote,total_exons,total_exons_wrote,total_mod)
+			total_exons_wrote+=write_records(translate_records(seqs),'exons')
+			total_genes_wrote+=write_records(translate_records(geneseq),'genes')
+		print "processed (and wrote): %s with %i(%i) genes and %i(%i) exons (%i modified))" %(infile,total_genes,total_genes_wrote,total_exons,total_exons_wrote,total_mod)
         
     #ref_recs = load_reffile(reffile)
     
