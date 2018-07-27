@@ -1,6 +1,7 @@
 import argparse
 import subprocess
 import time
+import os
 
 from rna2ppts import wrapper
 from rna2ppts import converter 
@@ -27,7 +28,21 @@ t_start=time.time()
 if (args['createindex']):
 	print "calling creating index subroutine"
 	run_createindex(args)
+
+def convert_path(path):
+	#dir = os.path.dirname(__file__)
+	dir = os.getcwd()
+	if os.path.isabs(path):
+		print "input path is absolute"
+	else:
+		path = os.path.join(dir, path)
+		print "absolute path is %s" % path
+	return path
 	
+for i in ['r1','r2','starindex','fasta','outputdir','annotation','vcf']:
+			if args[i] != None:
+				args[i]=convert_path(args[i])
+				
 #run_star1stpass(args)
 #run_starreindex(args)
 #run_star2ndpass(args)

@@ -144,7 +144,7 @@ def calc_proteins(sourcebase,reffile,vcffile):
 	else:
 		no_vcf=True
 		vcfrecords=''
-		
+	print "DEBUG: reffile for pyfaidx is: %s"%reffile	
 	fasta = pyfaidx.Fasta(reffile)
 	
 	
