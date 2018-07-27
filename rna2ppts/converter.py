@@ -38,7 +38,7 @@ def get_gff_files(sourcebase):
     print "Found %i file(s) in %s ending with %s." %(len(gfffiles), sourcebase, fileending)
     return gfffiles
 
-def get_gene_sequences(gene,db,vcfrecords):
+def get_gene_sequences(gene,db,vcfrecords,fasta):
 	sequences = []
 	geneseq = []
 	num_mod=0
@@ -157,7 +157,7 @@ def calc_proteins(sourcebase,reffile,vcffile):
 		db = gffutils.create_db(infile, ':memory:')
 		for gene in db.features_of_type('gene'):
 			total_genes+=1
-			seqs,geneseq,num_mod=get_gene_sequences(gene,db,vcfrecords)
+			seqs,geneseq,num_mod=get_gene_sequences(gene,db,vcfrecords,fasta)
 			total_exons+=len(seqs)
 			total_mod+=num_mod
             #a=seqs
