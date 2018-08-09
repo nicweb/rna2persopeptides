@@ -19,9 +19,6 @@ parser.add_argument("--createindex", help="creates star index req. -s -f -a",act
 args=vars(parser.parse_args())
 #print args
 
-star_exec="STAR"
-spladder_exec="/software/spladder/python/spladder.py"
-
 	
 t_start=time.time()	
 
@@ -43,10 +40,10 @@ for i in ['r1','r2','starindex','fasta','outputdir','annotation','vcf']:
 			if args[i] != None:
 				args[i]=convert_path(args[i])
 				
-#run_star1stpass(args)
-#run_starreindex(args)
-#run_star2ndpass(args)
-#run_spladder(args)
+wrapper.run_star1stpass(args)
+wrapper.run_starreindex(args)
+wrapper.run_star2ndpass(args)
+wrapper.run_spladder(args)
 #do peptide stuff
 converter.calc_proteins('spladdrout',args['fasta'],args['vcf'])
 t_end=time.time()

@@ -1,3 +1,10 @@
+import subprocess
+import time
+import os
+
+star_exec="STAR"
+spladder_exec="/software/spladder/python/spladder.py"
+
 def run_external_cmd(command):
 	#bad error handling at the moment
 	#infos only printed when process finishes
