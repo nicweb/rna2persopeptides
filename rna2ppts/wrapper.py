@@ -42,12 +42,12 @@ def run_createindex(args):
 
 
 def run_star1stpass(args):
-	if not (args['starindex'] and args['r1'] and args['r2'] and args['fasta'] and args['outputdir']):
+	if not (args['starindex'] and args['r1'] and args['fasta'] and args['outputdir']):
 		print "not enough arguments for 1. star run"
 		exit(1)
 	star1stpass_cmd=[star_exec, \
            "--genomeDir",args['starindex'], \
-           "--readFilesIn",args['r1'],args['r2'], \
+           "--readFilesIn",args['r1'],args['r2'] if args['r2'] is not None else '', \
            "--runThreadN","4", \
            "--outFilterMultimapScoreRange","1", \
            "--outFilterMultimapNmax","20", \
@@ -71,7 +71,7 @@ def run_star1stpass(args):
 def run_star2ndpass(args):
 	star2ndpass_cmd=[star_exec, \
              "--genomeDir","GENOME_TMP", \
-             "--readFilesIn",args['r1'],args['r2'], \
+             "--readFilesIn",args['r1'],args['r2'] if args['r2'] is not None else '', \
              "--runThreadN","4", \
              "--outFilterMultimapScoreRange","1", \
              "--outFilterMultimapNmax","20", \
