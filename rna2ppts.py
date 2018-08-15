@@ -16,6 +16,9 @@ parser.add_argument("-a", "--annotation",help="path to annotation")
 parser.add_argument("-v", "--vcf",help="path to vcf")
 parser.add_argument("--verbose", help="increase output verbosity",action="store_true")
 parser.add_argument("--createindex", help="creates star index req. -s -f -a",action="store_true")
+parser.add_agrument("--runall", help="run complete")
+parser.add_agrument("--clean", help="clean only")
+parser.add_agrument("--convert", help="convert only")
 args=vars(parser.parse_args())
 #print args
 
@@ -40,11 +43,16 @@ for i in ['r1','r2','starindex','fasta','outputdir','annotation','vcf']:
 			if args[i] != None:
 				args[i]=convert_path(args[i])
 				
-wrapper.run_star1stpass(args)
-wrapper.run_starreindex(args)
-wrapper.run_star2ndpass(args)
-wrapper.run_spladder(args)
+
+if args.runall:
+	wrapper.run_star1stpass(args)
+	wrapper.run_starreindex(args)
+	wrapper.run_star2ndpass(args)
+	wrapper.run_spladder(args)
 #do peptide stuff
-converter.calc_proteins('spladdrout',args['fasta'],args['vcf'])
+if args.runall or args.convert:
+	converter.calc_proteins('spladdrout',args['fasta'],args['vcf'])
+if args.runall or args.clean:
+	cleaner.sequence_cleaner("spladdrout/predected_genes.fa")
 t_end=time.time()
 print "all done in %i seconds"%(t_end-t_start)
