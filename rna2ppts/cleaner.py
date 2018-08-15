@@ -122,7 +122,7 @@ def sequence_cleaner(fasta_file, min_length=0, por_n=100):
 
 userParameters = sys.argv[1:]
 
-if True:
+if False:
 #try:
     if len(userParameters) == 1:
         sequence_cleaner(userParameters[0])
