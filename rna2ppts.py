@@ -44,15 +44,15 @@ for i in ['r1','r2','starindex','fasta','outputdir','annotation','vcf']:
 				args[i]=convert_path(args[i])
 				
 
-if args.runall:
+if args['runall']:
 	wrapper.run_star1stpass(args)
 	wrapper.run_starreindex(args)
 	wrapper.run_star2ndpass(args)
 	wrapper.run_spladder(args)
 #do peptide stuff
-if args.runall or args.convert:
+if args['runall'] or args['convert']:
 	converter.calc_proteins('spladdrout',args['fasta'],args['vcf'])
-if args.runall or args.clean:
+if args['runall'] or args['clean']:
 	cleaner.sequence_cleaner("spladdrout/predected_genes.fa")
 t_end=time.time()
 print "all done in %i seconds"%(t_end-t_start)
