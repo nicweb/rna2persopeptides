@@ -5,6 +5,7 @@ import os
 
 from rna2ppts import wrapper
 from rna2ppts import converter 
+from rna2ppts import cleaner
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-r1", help="First RNA-FastQFile")
