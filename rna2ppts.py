@@ -54,6 +54,6 @@ if args['runall']:
 if args['runall'] or args['convert']:
 	converter.calc_proteins('spladdrout',args['fasta'],args['vcf'])
 if args['runall'] or args['clean']:
-	cleaner.sequence_cleaner("spladdrout/predected_genes.fa")
+	cleaner.sequence_cleaner("spladdrout/predected_genes.fa",8)
 t_end=time.time()
 print "all done in %i seconds"%(t_end-t_start)
