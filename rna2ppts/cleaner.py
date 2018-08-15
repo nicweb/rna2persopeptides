@@ -106,7 +106,8 @@ def sequence_cleaner(fasta_file, min_length=0, por_n=100):
 	mapping=get_gene_description(ids)
 	
 	for k in sequences.keys():
-		sequences[k] += "|" + mapping[sequence_ids[k]]
+		if sequence_ids[k] in mapping:
+			sequences[k] += "|" + mapping[sequence_ids[k]]
 	
 	
 	
