@@ -41,30 +41,35 @@ def get_gff_files(sourcebase):
 def get_gene_sequences(gene,db,vcfrecords,fasta):
 	sequences = []
 	geneseq = []
+	isoforms= []
 	num_mod=0
     #print gene
-	for i in db.children(gene,featuretype='exon'):
-		if vcfrecords != '':
-			events=check_feature_for_vcfevent(i)
-		else:
-			events=[]
-		if len(events) == 0:
-			rec = i.sequence(fasta)#.translate(to_stop=True)
-			sequences.append(SeqRecord(Seq(rec),i.id,i.attributes['Parent'][0],""))
-			geneseq.append(rec)
-		else:
-			num_mod+=1
+	for mrna in db.children(gene,featuretype='mRNA'):
+		for i in db.children(mrna,featuretype='exon'):
+			if vcfrecords != '':
+				events=check_feature_for_vcfevent(i)
+			else:
+				events=[]
+			if len(events) == 0:
+				rec = i.sequence(fasta)#.translate(to_stop=True)
+				sequences.append(SeqRecord(Seq(rec),i.id,i.attributes['Parent'][0],""))
+				geneseq.append(rec)
+			else:
+				num_mod+=1
         #    sequences.append(Seq.translate(i.sequence(fasta),to_stop=True))
-			rec = get_modified_sequence(i.sequence(fasta),events,i.start)
-			sequences.append(SeqRecord(Seq(rec),i.id,i.attributes['Parent'][0],""))
-			geneseq.append(rec)
+				rec = get_modified_sequence(i.sequence(fasta),events,i.start)
+				sequences.append(SeqRecord(Seq(rec),i.id,i.attributes['Parent'][0],""))
+				geneseq.append(rec)
+		isoforms.append(SeqRecord(Seq(''.join(geneseq)),mrna.id,gene.attributes['GeneName'][0],""))
+		genseq = []
+		
             #sequences.append(get_modified_sequence(i.sequence(fasta),events,i.start))
             #return get_modified_sequence(i.sequence(fasta),events)
         #if i.id!='exon_7569':
         #    print "this is the record"
         #    print sequences[-1]
-        
-	return sequences,[SeqRecord(Seq(''.join(geneseq)),gene.id,"")], num_mod 
+			
+	return sequences,isoforms, num_mod 
 
 def check_feature_for_vcfevent(feature):
     vcfevents = []
@@ -133,7 +138,7 @@ def translate_records(records):
 	for rec in records:
 		for i in range(0,3):
 			new_records.append(SeqRecord(rec.seq[i:].translate(to_stop=True),"%s %s TL-Windows: %i Strand: +"%(rec.name,rec.id,i),rec.name,""))
-			new_records.append(SeqRecord(rec.seq[i:].reverse_complement().translate(to_stop=True),"%s %s TL-Windows: %i Strand: - "%(rec.name,rec.id,i),rec.name,""))
+			new_records.append(SeqRecord(rec.seq.reverse_complement()[i:].translate(to_stop=True),"%s %s TL-Windows: %i Strand: - "%(rec.name,rec.id,i),rec.name,""))
 	return new_records
 
 def calc_proteins(sourcebase,reffile,vcffile):
@@ -155,7 +160,7 @@ def calc_proteins(sourcebase,reffile,vcffile):
 		total_exons_wrote=0
 		total_mod=0
 		db = gffutils.create_db(infile, ':memory:')
-		for gene in db.features_of_type('gene'):
+		for gene in db.features_of_type('gene'): #still ok??
 			total_genes+=1
 			seqs,geneseq,num_mod=get_gene_sequences(gene,db,vcfrecords,fasta)
 			total_exons+=len(seqs)
