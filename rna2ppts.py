@@ -16,9 +16,9 @@ parser.add_argument("-a", "--annotation",help="path to annotation")
 parser.add_argument("-v", "--vcf",help="path to vcf")
 parser.add_argument("--verbose", help="increase output verbosity",action="store_true")
 parser.add_argument("--createindex", help="creates star index req. -s -f -a",action="store_true")
-parser.add_argument("--runall", help="run complete")
-parser.add_argument("--clean", help="clean only")
-parser.add_argument("--convert", help="convert only")
+parser.add_argument("--runall", help="run complete",action="store_true")
+parser.add_argument("--clean", help="clean only",action="store_true")
+parser.add_argument("--convert", help="convert only",action="store_true")
 args=vars(parser.parse_args())
 #print args
 
